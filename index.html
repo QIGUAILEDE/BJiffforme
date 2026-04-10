@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 北影节 (BJIFF) 终极行程单</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #f3f4f6;
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            --safe-bg: #f0fdf4;
+            --safe-text: #166534;
+            --app-bg: #f2f2f7;
+            --card-bg: #ffffff;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+            background-color: var(--app-bg);
+            color: #1c1c1e;
+            line-height: 1.5;
+            margin: 0;
+            padding: 16px 12px 40px 12px;
+            /* 适配 iPhone 刘海/灵动岛区域 */
+            padding-top: env(safe-area-inset-top, 16px); 
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 24px; padding-top: 10px; }
+        .header h1 { color: var(--primary); font-size: 1.5rem; margin-bottom: 4px; font-weight: 700; }
+        .header p { color: #6b7280; font-size: 0.85rem; margin: 0; }
+        
+        .day-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .day-title {
+            font-size: 1.15rem; font-weight: 700;
+            border-bottom: 1px solid #e5e5ea;
+            padding-bottom: 12px; margin-bottom: 16px;
+            color: var(--primary); display: flex; justify-content: space-between;
+        }
+        .day-title span:last-child { font-size: 0.9rem; color: #636366; font-weight: 500; }
+        
+        .movie-item { display: flex; flex-direction: column; margin-bottom: 20px; position: relative; }
+        .movie-time-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+        .time-start { font-size: 1.25rem; font-weight: 800; color: #000; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; }
+        .time-end { font-size: 0.85rem; color: #8e8e93; }
+        
+        .info-col { padding-left: 12px; border-left: 3px solid #d1d5db; }
+        .movie-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 4px 0; color: #1c1c1e; }
+        .movie-meta { font-size: 0.8rem; color: #636366; margin: 0 0 6px 0; }
+        .cinema-info {
+            font-size: 0.85rem; color: #3a3a3c; font-weight: 500;
+            background: var(--secondary); display: inline-block;
+            padding: 4px 8px; border-radius: 6px; margin-bottom: 8px;
+        }
+        
+        /* 标签与票务系统 */
+        .ticket-wrapper { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; align-items: center; }
+        .status-badge {
+            font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; 
+            display: inline-flex; align-items: center; border: 1px solid transparent;
+        }
+        .badge-has { background: #d1fae5; color: #065f46; border-color: #34d399; }
+        .badge-none { background: #fee2e2; color: #991b1b; border-color: #f87171; }
+        .badge-source { background: #f3e8ff; color: #6b21a8; border-color: #d8b4fe; }
+        .badge-seat { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc; }
+        .badge-companion { background: #e0f2fe; color: #0369a1; border-color: #7dd3fc; }
+        
+        /* 更新按钮 */
+        .update-btn {
+            background: #fef08a; color: #854d0e; border: 1px solid #fde047;
+            font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; display: inline-flex; align-items: center;
+        }
+        .update-btn:active { background: #fde047; transform: scale(0.98); }
+
+        .tag {
+            display: inline-block; padding: 2px 6px; border-radius: 4px;
+            font-size: 0.7rem; margin-right: 6px; background: #e5e5ea; color: #3a3a3c;
+        }
+        .tag.unit { background: #ede9fe; color: #5b21b6; }
+        .tag.activity { background: #fef08a; color: #854d0e; }
+        
+        /* 转场提醒 */
+        .transit-card {
+            margin: 0 0 20px 0; padding: 12px 14px; border-radius: 10px;
+            font-size: 0.85rem; display: flex; align-items: flex-start;
+            background: #fff;
+        }
+        .transit-card.safe { background: #f0fdf4; color: #166534; border-left: 4px solid #22c55e; }
+        .transit-card.warning { background: #fffbeb; color: #92400e; border-left: 4px solid #f59e0b; }
+        .transit-card.danger { background: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444; font-weight: bold; }
+        .transit-icon { margin-right: 8px; font-size: 1.2rem; }
+
+        /* 弹窗系统 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; width: 90%; max-width: 380px; border-radius: 16px;
+            padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .modal-title { font-size: 1.2rem; font-weight: bold; margin-top: 0; margin-bottom: 16px; color: #1c1c1e; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 0.85rem; color: #636366; margin-bottom: 6px; font-weight: 500; }
+        .input-group input {
+            width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 1rem; -webkit-appearance: none;
+        }
+        .input-group input:focus { outline: none; border-color: var(--primary); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+        .btn {
+            flex: 1; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 600;
+            text-align: center; border: none; cursor: pointer; -webkit-appearance: none;
+        }
+        .btn-cancel { background: #f2f2f7; color: #1c1c1e; }
+        .btn-save { background: var(--primary); color: white; }
+
+        /* 平板以上设备调整排版 */
+        @media (min-width: 600px) {
+            .movie-item { flex-direction: row; }
+            .movie-time-header { flex-direction: column; width: 130px; margin-bottom: 0; gap: 2px; }
+            .info-col { flex-grow: 1; padding-left: 15px; }
+            .transit-card { margin-left: 145px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🎬 2026 北影节 终极排片表</h1>
+        <p>适配 iPhone 16 Pro Max · 票务本地持久化保存</p>
+    </div>
+
+    <div class="day-card">
+        <div class="day-title"><span>4月17日 (周五)</span><span>📍 五棵松</span></div>
+        
+        <div class="movie-item" id="m1">
+            <div class="movie-time-header"><span class="time-start">18:30</span><span class="time-end">散场 ~20:39</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">春风化雨 4K</h3>
+                <p class="movie-meta"><span class="tag unit">致敬·修复</span> 129分钟</p>
+                <div class="cinema-info">耀莱成龙影城（五棵松店） · 杜比影院</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: LMY/闲鱼</span>
+                    <span class="status-badge badge-seat">💺 座位: 14排4, 4排12</span>
+                    <span class="status-badge badge-companion">👥 同看: GIGI</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="transit-card safe">
+            <span class="transit-icon">🍿</span>
+            <div><strong>同影院连场：</strong>间隔约 31 分钟，原地休息。</div>
+        </div>
+
+        <div class="movie-item" id="m2">
+            <div class="movie-time-header"><span class="time-start">21:10</span><span class="time-end">散场 ~23:12</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">天生狂徒 导演剪辑版</h3>
+                <p class="movie-meta"><span class="tag unit">嘉年华-午夜场</span> 122分钟</p>
+                <div class="cinema-info">耀莱成龙影城（五棵松店） · 杜比影院</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: GIGI</span>
+                    <span class="status-badge badge-seat">💺 座位: 12排28, 12排26</span>
+                    <span class="status-badge badge-companion">👥 同看: GIGI</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-title"><span>4月18日 (周六)</span><span>📍 国贸 → 中关村 → 大屯路</span></div>
+        
+        <div class="movie-item" id="m3">
+            <div class="movie-time-header"><span class="time-start">12:30</span><span class="time-end">散场 ~14:50</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">旅行 4K</h3>
+                <p class="movie-meta"><span class="tag unit">致敬·纪念</span> 140分钟</p>
+                <div class="cinema-info">英皇电影城（英皇中心IMAX店） · IMAX激光厅</div>
+                <div class="ticket-wrapper" data-default="none">
+                    </div>
+            </div>
+        </div>
+
+        <div class="transit-card warning">
+            <span class="transit-icon">🚇</span>
+            <div><strong>跨区转场 (100分钟)：英皇中心 → 完美中关村。</strong>建议地铁1号线转4号线。</div>
+        </div>
+
+        <div class="movie-item" id="m4">
+            <div class="movie-time-header"><span class="time-start">16:30</span><span class="time-end">散场 ~18:07</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">传奇：演唱的猫王 IMAX</h3>
+                <p class="movie-meta"><span class="tag unit">幕力所集</span> 97分钟</p>
+                <div class="cinema-info">完美世界影城（中关村） · IMAX激光</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 猫眼</span>
+                    <span class="status-badge badge-seat">💺 座位: 12排16, 12排17</span>
+                    <span class="status-badge badge-companion">👥 同看: GIGI</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="transit-card warning">
+            <span class="transit-icon">🚇</span>
+            <div><strong>跨区转场 (83分钟)：完美中关村 → 金泉港。</strong>建议地铁10号线转15号线，约45分钟。</div>
+        </div>
+
+        <div class="movie-item" id="m5">
+            <div class="movie-time-header"><span class="time-start">19:30</span><span class="time-end">散场 ~21:45</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">IT IMAX</h3>
+                <p class="movie-meta"><span class="tag unit">嘉年华-午夜场</span> 135分钟</p>
+                <div class="cinema-info">金泉港国际影城IMAX · 1号IMAX影厅</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: GIGI</span>
+                    <span class="status-badge badge-seat">💺 座位: 13排29, 13排30</span>
+                    <span class="status-badge badge-companion">👥 同看: GIGI</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-title"><span>4月19日 (周日)</span><span>📍 国贸 → 海淀西 → 中关村</span></div>
+        
+        <div class="movie-item" id="m6">
+            <div class="movie-time-header"><span class="time-start">10:00</span><span class="time-end">散场 ~11:40</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">潘达洛斯天使</h3>
+                <p class="movie-meta"><span class="tag unit">注目未来</span> <span class="tag activity">映后:主创交流</span> 100分钟</p>
+                <div class="cinema-info">英皇电影城（英皇中心） · 2号杜比厅</div>
+                <div class="ticket-wrapper" data-default="none">
+                    </div>
+            </div>
+        </div>
+
+        <div class="transit-card safe">
+            <span class="transit-icon">☕</span>
+            <div><strong>同影院连场：</strong>间隔约 80 分钟 (扣除交流可能剩50分)，可在附近就餐。</div>
+        </div>
+
+        <div class="movie-item" id="m7">
+            <div class="movie-time-header"><span class="time-start">13:00</span><span class="time-end">散场 ~14:38</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">破茧</h3>
+                <p class="movie-meta"><span class="tag unit">注目未来</span> <span class="tag activity">映后:主创交流</span> 98分钟</p>
+                <div class="cinema-info">英皇电影城（英皇中心） · 2号杜比厅</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 猫眼</span>
+                    <span class="status-badge badge-seat">💺 座位: I排3</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="transit-card warning">
+            <span class="transit-icon">🚕</span>
+            <div><strong>长线转场 (~112分钟)：英皇中心 → 中间影院。</strong><br>映后交流结束需立即出发，推荐地铁6号线配合打车。</div>
+        </div>
+
+        <div class="movie-item" id="m8">
+            <div class="movie-time-header"><span class="time-start">16:30</span><span class="time-end">散场 ~18:25</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">红气球之旅</h3>
+                <p class="movie-meta"><span class="tag unit">比诺什回顾</span> 115分钟</p>
+                <div class="cinema-info">中间影院 · 剧场厅</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: LMY</span>
+                    <span class="status-badge badge-seat">💺 座位: 17排12</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="transit-card safe">
+            <span class="transit-icon">🚕</span>
+            <div><strong>海淀内转场 (85分钟)：中间影院 → 完美中关村。</strong>距离约10公里，时间充裕。</div>
+        </div>
+
+        <div class="movie-item" id="m9">
+            <div class="movie-time-header"><span class="time-start">19:50</span><span class="time-end">散场 ~22:48</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">狗镇 4K</h3>
+                <p class="movie-meta"><span class="tag unit">嘉年华-午夜场</span> 178分钟</p>
+                <div class="cinema-info">完美世界影城（中关村） · CINITY高帧</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: ZXT</span>
+                    <span class="status-badge badge-seat">💺 座位: unknown</span>
+                    <span class="status-badge badge-companion">👥 同看: ZXT</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-title"><span>4月21日 - 23日 (工作日)</span><span>📍 单场放映</span></div>
+        
+        <div class="movie-item" id="m10">
+            <div class="movie-time-header"><span class="time-start">21日 19:50</span><span class="time-end">散场 ~21:37</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">静修之地 4K</h3>
+                <p class="movie-meta"><span class="tag unit">镜 界</span> 107分钟</p>
+                <div class="cinema-info">保利国际影城（天安门CINITY店）</div>
+                <div class="ticket-wrapper" data-default="none"></div>
+            </div>
+        </div>
+        
+        <div class="movie-item" id="m11" style="border-top:1px dashed #e5e5ea; padding-top:15px;">
+            <div class="movie-time-header"><span class="time-start">22日 19:00</span><span class="time-end">散场 ~21:01</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">携风暴而来</h3>
+                <p class="movie-meta"><span class="tag unit">镜 界</span> 121分钟</p>
+                <div class="cinema-info">万达影城（CBD万达广场IMAX店）</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 猫眼</span>
+                    <span class="status-badge badge-seat">💺 座位: 11排9</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="movie-item" id="m12" style="border-top:1px dashed #e5e5ea; padding-top:15px;">
+            <div class="movie-time-header"><span class="time-start">23日 20:05</span><span class="time-end">散场 ~21:39</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">罗斯 4K</h3>
+                <p class="movie-meta"><span class="tag unit">首映</span> 94分钟</p>
+                <div class="cinema-info">中国电影资料馆艺术影院 · 1号厅</div>
+                <div class="ticket-wrapper" data-default="none">
+                    <span class="status-badge badge-companion">👥 同看: Diane</span>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-title"><span>4月24日 (周五)</span><span>📍 中关村</span></div>
+        
+        <div class="movie-item" id="m13">
+            <div class="movie-time-header"><span class="time-start">18:30</span><span class="time-end">散场 ~20:23</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">如果有腿，我会踢你 4K</h3>
+                <p class="movie-meta"><span class="tag unit">首映</span> 113分钟</p>
+                <div class="cinema-info">完美世界影城（中关村） · CINITY高帧厅</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 溪溪</span>
+                    <span class="status-badge badge-seat">💺 座位: 7排21, 7排22</span>
+                    <span class="status-badge badge-companion">👥 同看: Diane</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="transit-card safe">
+            <span class="transit-icon">☕</span>
+            <div><strong>同影院连场：</strong>间隔约 37 分钟，隔壁厅无缝衔接。</div>
+        </div>
+
+        <div class="movie-item" id="m14">
+            <div class="movie-time-header"><span class="time-start">21:00</span><span class="time-end">散场 ~22:43</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">对不起，宝贝 4K</h3>
+                <p class="movie-meta"><span class="tag unit">首映</span> 103分钟</p>
+                <div class="cinema-info">完美世界影城（中关村） · CINITY高帧厅</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 溪溪</span>
+                    <span class="status-badge badge-seat">💺 座位: 8排18, 8排19</span>
+                    <span class="status-badge badge-companion">👥 同看: Diane</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-title"><span>4月25日 (周六)</span><span>📍 世纪金源 → 影博</span></div>
+        
+        <div class="movie-item" id="m15">
+            <div class="movie-time-header"><span class="time-start">10:30</span><span class="time-end">散场 ~12:22</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">冰风暴</h3>
+                <p class="movie-meta"><span class="tag unit">嘉年华</span> 112分钟</p>
+                <div class="cinema-info">北京英嘉国际影城（金源） · 4号厅</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: ZXT</span>
+                    <span class="status-badge badge-seat">💺 座位: unknown</span>
+                    <span class="status-badge badge-companion">👥 同看: ZXT</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="transit-card safe">
+            <span class="transit-icon">🍔</span>
+            <div><strong>同影院连场：</strong>间隔约 38 分钟，建议商场内速食解决午餐。</div>
+        </div>
+
+        <div class="movie-item" id="m16">
+            <div class="movie-time-header"><span class="time-start">13:00</span><span class="time-end">散场 ~15:42</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">英国病人</h3>
+                <p class="movie-meta"><span class="tag unit">比诺什回顾</span> 162分钟</p>
+                <div class="cinema-info">北京英嘉国际影城（金源） · 4号厅</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: XIXI</span>
+                    <span class="status-badge badge-seat">💺 座位: 4排31</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="transit-card danger">
+            <span class="transit-icon">⛔</span>
+            <div><strong>致命预警 (仅48分钟)：世纪金源(西三环) → 电影博物馆(东五环外)。</strong><br>跨度极大，正常交通至少需要 1.5 小时，必须有所取舍。</div>
+        </div>
+
+        <div class="movie-item" id="m17">
+            <div class="movie-time-header"><span class="time-start">16:30</span><span class="time-end">散场 ~17:56</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">滚石乐队：至臻现场 IMAX</h3>
+                <p class="movie-meta"><span class="tag unit">幕力所集</span> 86分钟</p>
+                <div class="cinema-info">中国电影博物馆 · IMAX GT</div>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: ZXT</span>
+                    <span class="status-badge badge-seat">💺 座位: 8排17, 8排15</span>
+                    <span class="status-badge badge-companion">👥 同看: ZXT</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-title"><span>4月26日 (周日)</span><span>📍 小西天资料馆 (PTA马拉松)</span></div>
+        <div class="transit-card safe" style="margin:0 0 20px 0;">
+            <span class="transit-icon">🏆</span>
+            <div><strong>全天驻扎：中国电影资料馆艺术影院 1号厅。</strong><br>硬核体能考验，请备好干粮！</div>
+        </div>
+
+        <div class="movie-item" id="m18">
+            <div class="movie-time-header"><span class="time-start">09:30</span><span class="time-end">散场 ~12:39</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">木兰花</h3>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 猫眼</span>
+                    <span class="status-badge badge-seat">💺 座位: 18排1</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="movie-item" id="m19" style="border-top:1px dashed #e5e5ea; padding-top:15px;">
+            <div class="movie-time-header"><span class="time-start">13:10</span><span class="time-end">散场 ~14:45</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">私恋失调</h3>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 猫眼</span>
+                    <span class="status-badge badge-seat">💺 座位: 7排24</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="movie-item" id="m20" style="border-top:1px dashed #e5e5ea; padding-top:15px;">
+            <div class="movie-time-header"><span class="time-start">15:15</span><span class="time-end">散场 ~17:53</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">血色将至</h3>
+                <div class="ticket-wrapper" data-default="none"></div>
+            </div>
+        </div>
+        
+        <div class="movie-item" id="m21" style="border-top:1px dashed #e5e5ea; padding-top:15px;">
+            <div class="movie-time-header"><span class="time-start">18:30</span><span class="time-end">散场 ~20:40</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">魅影缝匠 4K</h3>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 猫眼</span>
+                    <span class="status-badge badge-seat">💺 座位: 18排13</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="movie-item" id="m22" style="border-top:1px dashed #e5e5ea; padding-top:15px;">
+            <div class="movie-time-header"><span class="time-start">21:10</span><span class="time-end">散场 ~23:23</span></div>
+            <div class="info-col">
+                <h3 class="movie-title">甘草披萨 4K</h3>
+                <div class="ticket-wrapper" data-default="has">
+                    <span class="status-badge badge-has">✅ 已有票</span>
+                    <span class="status-badge badge-source">🎫 票源: 猫眼</span>
+                    <span class="status-badge badge-seat">💺 座位: 18排2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="ticketModal">
+    <div class="modal-content">
+        <h3 class="modal-title">添加票务信息</h3>
+        <p id="modalMovieName" style="color:var(--primary); font-size:0.9rem; margin-top:-10px; margin-bottom:15px;"></p>
+        <div class="input-group">
+            <label>票源 (如: 闲鱼/影展群/朋友)</label>
+            <input type="text" id="inputSource" placeholder="输入票源">
+        </div>
+        <div class="input-group">
+            <label>座位 (如: 8排15座)</label>
+            <input type="text" id="inputSeat" placeholder="输入座位号">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal()">取消</button>
+            <button class="btn btn-save" onclick="saveTicket()">保存更新</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentEditId = null;
+
+    // 页面加载时执行
+    document.addEventListener("DOMContentLoaded", () => {
+        const movies = document.querySelectorAll(".movie-item");
+        
+        movies.forEach(movie => {
+            const wrapper = movie.querySelector(".ticket-wrapper");
+            const id = movie.id;
+            const defaultState = wrapper.getAttribute("data-default");
+            
+            // 检查本地存储中是否有更新记录
+            const savedData = localStorage.getItem('bjiff_ticket_' + id);
+            
+            // 如果默认是无票，且本地没有保存的数据，渲染"无票"UI
+            if (defaultState === "none" && !savedData) {
+                renderNoTicket(wrapper, id);
+            } else if (savedData) {
+                // 如果本地有修改过的数据，渲染为"有票"
+                const data = JSON.parse(savedData);
+                renderHasTicket(wrapper, data.source, data.seat);
+            }
+        });
+    });
+
+    // 渲染无票状态 (带更新按钮)
+    function renderNoTicket(container, movieId) {
+        // 保留原有的同看标签
+        const companion = container.querySelector(".badge-companion");
+        const compHtml = companion ? companion.outerHTML : "";
+        
+        container.innerHTML = `
+            <span class="status-badge badge-none">🚨 暂无票 (需要在闲鱼/影展交流群收票)</span>
+            <button class="update-btn" onclick="openModal('${movieId}')">✏️ 登记出票</button>
+            ${compHtml}
+        `;
+    }
+
+    // 渲染有票状态
+    function renderHasTicket(container, source, seat) {
+        // 保留原有的同看标签
+        const companion = container.querySelector(".badge-companion");
+        const compHtml = companion ? companion.outerHTML : "";
+
+        container.innerHTML = `
+            <span class="status-badge badge-has">✅ 已有票</span>
+            <span class="status-badge badge-source">🎫 票源: ${source || '未知'}</span>
+            <span class="status-badge badge-seat">💺 座位: ${seat || '未知'}</span>
+            <button class="update-btn" onclick="openModal('${container.closest('.movie-item').id}')" style="background:#e5e5ea; color:#1c1c1e; border:none;">修改</button>
+            ${compHtml}
+        `;
+    }
+
+    // 打开弹窗
+    function openModal(movieId) {
+        currentEditId = movieId;
+        const movieItem = document.getElementById(movieId);
+        const title = movieItem.querySelector(".movie-title").innerText;
+        
+        document.getElementById("modalMovieName").innerText = "为《" + title + "》添加票务";
+        
+        // 读取现有数据如果存在
+        const savedData = localStorage.getItem('bjiff_ticket_' + movieId);
+        if(savedData) {
+            const data = JSON.parse(savedData);
+            document.getElementById("inputSource").value = data.source;
+            document.getElementById("inputSeat").value = data.seat;
+        } else {
+            document.getElementById("inputSource").value = "";
+            document.getElementById("inputSeat").value = "";
+        }
+
+        document.getElementById("ticketModal").style.display = "flex";
+    }
+
+    // 关闭弹窗
+    function closeModal() {
+        document.getElementById("ticketModal").style.display = "none";
+        currentEditId = null;
+    }
+
+    // 保存信息
+    function saveTicket() {
+        const source = document.getElementById("inputSource").value.trim();
+        const seat = document.getElementById("inputSeat").value.trim();
+        
+        if (!source && !seat) {
+            alert("请至少填写一项票务信息！");
+            return;
+        }
+
+        // 保存到本地存储 LocalStorage
+        const data = { source: source, seat: seat };
+        localStorage.setItem('bjiff_ticket_' + currentEditId, JSON.stringify(data));
+        
+        // 更新 UI
+        const movieItem = document.getElementById(currentEditId);
+        const wrapper = movieItem.querySelector(".ticket-wrapper");
+        renderHasTicket(wrapper, source, seat);
+        
+        closeModal();
+    }
+</script>
+
+</body>
+</html>
